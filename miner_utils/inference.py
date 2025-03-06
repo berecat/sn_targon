@@ -17,7 +17,7 @@ async def run():
     try:
         start_send_message_time = time.time()
         client = OpenAI(
-            api_key="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"
+            api_key=""
         )
 
         # # Generate prompt dynamically
