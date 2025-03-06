@@ -21,7 +21,11 @@ from targon.types import Endpoints, InferenceStats
 import time
 from typing import Dict, Any
 import openai
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+api_key = os.getenv("OPENAPI_KEY")
     
 async def send_request(request: Dict[str, Any], endpoint: Endpoints, stats: Any):
     """
@@ -31,7 +35,6 @@ async def send_request(request: Dict[str, Any], endpoint: Endpoints, stats: Any)
     :param endpoint: Either 'chat' (ChatCompletion) or 'completion' (TextCompletion).
     :param stats: Object to store response tokens for tracking.
     """
-
     start_token_time = 0
     start_send_message_time = time.time()
     token_times = []
@@ -43,7 +46,7 @@ async def send_request(request: Dict[str, Any], endpoint: Endpoints, stats: Any)
                 request["model"] = "gpt-4o"
                 request["logprobs"] = True
                 client = openai.AsyncOpenAI(
-                    api_key="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",  # Replace with your actual API key
+                    api_key=api_key,  # Replace with your actual API key
                     max_retries=0,
                     timeout=openai.Timeout(60, connect=5, read=5),
                 )
@@ -61,7 +64,7 @@ async def send_request(request: Dict[str, Any], endpoint: Endpoints, stats: Any)
                 request["logprobs"] = 5
                 request["model"] = "gpt-4o-mini"
                 client = openai.AsyncOpenAI(
-                    api_key="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",  # Replace with your actual API key
+                    api_key=api_key,  # Replace with your actual API key
                     max_retries=0,
                     timeout=openai.Timeout(60, connect=5, read=5),
                 )
