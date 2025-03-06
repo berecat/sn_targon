@@ -95,6 +95,10 @@ class Miner(BaseNeuron):
         )
 
     async def receive_models(self, request: Request):
+        return [
+            "EnvyIrys/EnvyIrys_sn111_14"    
+        ]
+        
         models = await request.json()
         bt.logging.info(
             "\u2713",
@@ -107,16 +111,19 @@ class Miner(BaseNeuron):
         return [m for m, v in self.config_file.miner_endpoints.items() if v.port]
 
     async def list_models(self, _: Request):
+        return [
+            "EnvyIrys/EnvyIrys_sn111_14"    
+        ]
+        
         assert self.config_file
         assert self.config_file.miner_endpoints
         return [m for m, v in self.config_file.miner_endpoints.items() if v.port]
 
     async def list_nodes(self, request: Request):
         msgArr = []
-        assert self.config_file
-        assert self.config_file.miner_nodes
+        nodes = ["http://89.169.103.120:8000"]
         reqJson = await request.json()
-        for node in self.config_file.miner_nodes:
+        for node in nodes:
             try:
                 async with httpx.AsyncClient() as client:
                     url = node
@@ -127,6 +134,20 @@ class Miner(BaseNeuron):
                 bt.logging.error(f"Error pinging node {node}: {str(e)}")
 
         return msgArr
+        # assert self.config_file
+        # assert self.config_file.miner_nodes
+        # reqJson = await request.json()
+        # for node in self.config_file.miner_nodes:
+        #     try:
+        #         async with httpx.AsyncClient() as client:
+        #             url = node
+        #             response = await client.post(url, json=reqJson)
+        #             responseJson = response.json()
+        #             msgArr.append(responseJson)
+        #     except Exception as e:
+        #         bt.logging.error(f"Error pinging node {node}: {str(e)}")
+
+        # return msgArr
 
     async def determine_epistula_version_and_verify(self, request: Request):
         version = request.headers.get("Epistula-Version")

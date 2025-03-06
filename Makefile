@@ -1,0 +1,1 @@
+pm2 start neurons/miner.py --name miner --interpreter  python3 -- --wallet.name c_targon --netuid 4 --wallet.hotkey h_targon --subtensor.network finney --axon.port 8009 --logging.trace
