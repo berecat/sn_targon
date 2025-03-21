@@ -14,7 +14,6 @@ from targon.epistula import verify_signature
 from targon.utils import print_info
 import uvicorn
 import bittensor as bt
-import uuid
 
 
 class Miner(BaseNeuron):
@@ -57,7 +56,10 @@ class Miner(BaseNeuron):
             model: httpx.AsyncClient(
                 timeout=httpx.Timeout(60 * 3),
                 base_url=f"{endpoint.url}:{endpoint.port}/v1",
-                headers={"Authorization": f"Bearer {self.config_file.miner_api_key}"},
+                headers={
+                    "Authorization": f"Bearer {self.config_file.miner_api_key}",
+                    "Content-Type": "application/json",
+                },
             )
             for model, endpoint in self.config_file.miner_endpoints.items()
         }
@@ -72,7 +74,10 @@ class Miner(BaseNeuron):
         client = self.clients[model]
         assert client
         req = client.build_request(
-            "POST", "/chat/completions", content=await request.body()
+            "POST",
+            "/chat/completions",
+            content=await request.body(),
+            headers=request.headers.items(),
         )
         r = await client.send(req, stream=True)
         return StreamingResponse(
@@ -95,59 +100,23 @@ class Miner(BaseNeuron):
         )
 
     async def receive_models(self, request: Request):
-        return [
-            "EnvyIrys/EnvyIrys_sn111_14"    
-        ]
-        
         models = await request.json()
         bt.logging.info(
             "\u2713",
             f"Received model list from {request.headers.get('Epistula-Signed-By', '')[:8]}: {models}",
         )
-
-        # This should return the exact same thing as `list_models`
-        assert self.config_file
-        assert self.config_file.miner_endpoints
-        return [m for m, v in self.config_file.miner_endpoints.items() if v.port]
+        return self.get_models()
 
     async def list_models(self, _: Request):
-        return [
-            "EnvyIrys/EnvyIrys_sn111_14"    
-        ]
-        
+        return self.get_models()
+
+    def get_models(self):
+        # TODO
+        # Miners need to return {model: qps} for each model
+        # It is up to the miner to determine their qps
         assert self.config_file
         assert self.config_file.miner_endpoints
-        return [m for m, v in self.config_file.miner_endpoints.items() if v.port]
-
-    async def list_nodes(self, request: Request):
-        msgArr = []
-        nodes = ["http://89.169.103.120:8000"]
-        reqJson = await request.json()
-        for node in nodes:
-            try:
-                async with httpx.AsyncClient() as client:
-                    url = node
-                    response = await client.post(url, json=reqJson)
-                    responseJson = response.json()
-                    msgArr.append(responseJson)
-            except Exception as e:
-                bt.logging.error(f"Error pinging node {node}: {str(e)}")
-
-        return msgArr
-        # assert self.config_file
-        # assert self.config_file.miner_nodes
-        # reqJson = await request.json()
-        # for node in self.config_file.miner_nodes:
-        #     try:
-        #         async with httpx.AsyncClient() as client:
-        #             url = node
-        #             response = await client.post(url, json=reqJson)
-        #             responseJson = response.json()
-        #             msgArr.append(responseJson)
-        #     except Exception as e:
-        #         bt.logging.error(f"Error pinging node {node}: {str(e)}")
-
-        # return msgArr
+        return {m: v.qps for m, v in self.config_file.miner_endpoints.items() if v.port}
 
     async def determine_epistula_version_and_verify(self, request: Request):
         version = request.headers.get("Epistula-Version")
@@ -233,6 +202,7 @@ class Miner(BaseNeuron):
         # change the config in the axon
         app = FastAPI()
         router = APIRouter()
+        router.add_api_route("/", ping, methods=["GET"])
         router.add_api_route(
             "/v1/chat/completions",
             self.create_chat_completion,
@@ -257,12 +227,6 @@ class Miner(BaseNeuron):
             dependencies=[Depends(self.determine_epistula_version_and_verify)],
             methods=["GET"],
         )
-        router.add_api_route(
-            "/nodes",
-            self.list_nodes,
-            dependencies=[Depends(self.determine_epistula_version_and_verify)],
-            methods=["POST"],
-        )
         app.include_router(router)
         fast_config = uvicorn.Config(
             app,
@@ -284,6 +248,10 @@ class Miner(BaseNeuron):
             bt.logging.error(str(e))
             bt.logging.error(traceback.format_exc())
         self.shutdown()
+
+
+def ping():
+    return 200
 
 
 if __name__ == "__main__":
