@@ -34,7 +34,7 @@ def str2bool(v):
 
 dotenv.load_dotenv()
 AUTO_UPDATE = not str2bool(os.getenv("NO_AUTO_UPDATE", "False"))
-IMAGE_TAG = os.getenv("IMAGE_TAG", "latest")
+IMAGE_TAG = os.getenv("IMAGE_TAG", "test")
 HEARTBEAT = str2bool(os.getenv("HEARTBEAT", "False"))
 IS_TESTNET = str2bool(os.getenv("IS_TESTNET", "False"))
 CONFIG_FILE = os.getenv("CONFIG_FILE", "config.json")

@@ -53,7 +53,7 @@ def estimate_max_size(model_name):
     "Returns size in MiB, what nvidia smi prints"
     try:
         model = estimate.create_empty_model(
-            model_name, library_name="transformers", trust_remote_code=False
+            model_name, library_name="transformers", trust_remote_code=True
         )
     except (RuntimeError, OSError) as e:
         library = estimate.check_has_model(e)

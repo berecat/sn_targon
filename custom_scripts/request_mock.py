@@ -120,8 +120,8 @@ async def handle_inference(
     )
     
     try:
-    
-        return await send_request(
+        
+        chat = await send_request(
             request,
             endpoint,
             stats
